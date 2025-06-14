@@ -59,7 +59,7 @@ fun ResepFavoritScreen(navController: NavController) {
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFFF0ECCF))
+                    .background(Color(0xFFF0EFE6))
                     .padding(16.dp)
             ) {
                 Icon(

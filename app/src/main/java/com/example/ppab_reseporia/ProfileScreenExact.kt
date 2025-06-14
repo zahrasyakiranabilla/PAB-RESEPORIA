@@ -1,32 +1,26 @@
 package com.example.ppab_reseporia
 
-import android.util.Log
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -35,159 +29,232 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 
 @Composable
 fun ProfileScreenExact(navController: NavController? = null) {
-    //masih menggunakan data dummy
-    val username = "Zahra Syakira Nabilla"
+    val fullName = "Zahra Syakira Nabilla"
     val email = "zahrasyakiranabilla@gmail.com"
+
+    // State untuk mengontrol dialog
+    var showLogoutDialog by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFD2D0A0))
-            .padding(top = 16.dp)
+            .background(Color(0xFFF0EFE6)) // Warna latar belakang utama
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp, horizontal = 16.dp),
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.home),
-                contentDescription = "Kembali ke Beranda",
-                modifier = Modifier
-                    .size(32.dp)
-                    .align(Alignment.CenterStart)
-                    .clickable { navController?.popBackStack() }
+        ProfileTopAppBar(navController)
+        ProfileHeader(fullName, email) {
+            navController?.navigate(AlurApp.EDIT_PROFILE_SCREEN)
+        }
+        Spacer(modifier = Modifier.height(24.dp))
+        StatisticsSection(savedRecipes = 9)
+        Spacer(modifier = Modifier.height(16.dp))
+        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+            ProfileMenuItem(
+                icon = Icons.Default.FavoriteBorder,
+                text = "Resep Favorit",
+                onClick = { navController?.navigate(AlurApp.FAVORITE_RECIPES_SCREEN) }
             )
-            Text(
-                text = "Profile",
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.Center)
+            Divider()
+            ProfileMenuItem(
+                icon = Icons.AutoMirrored.Filled.HelpOutline,
+                text = "Saran & Pengaduan",
+                onClick = { navController?.navigate(AlurApp.FEEDBACK_SCREEN) }
             )
         }
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.weight(1f))
 
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp),
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF73946B))
-        ) {
-            Column(
-                modifier = Modifier
-                    .padding(20.dp)
-                    .fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.profile),
-                    contentDescription = "Profile Picture",
-                    modifier = Modifier
-                        .size(108.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFFC5D0B3).copy(alpha = 0.3f)),
-                    contentScale = ContentScale.Crop
-                )
-                Spacer(modifier = Modifier.height(20.dp))
-                ProfileDisplayField(label = "Username", value = username)
-                Spacer(modifier = Modifier.height(12.dp))
-                ProfileDisplayField(label = "Email", value = email)
-                Spacer(modifier = Modifier.height(24.dp))
-                Button(
-                    onClick = {
-                        Log.d("ProfileScreenNav", "Tombol Edit Profile diklik.")
-                        if (navController == null) {
-                            Log.e("ProfileScreenNav", "NavController adalah null!")
-                        } else {
-                            Log.d("ProfileScreenNav", "Mencoba navigasi ke 'EditProfile'...")
-                            navController.navigate(AlurApp.EDIT_PROFILE_SCREEN)
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth(0.5f)
-                        .height(48.dp),
-                    shape = RoundedCornerShape(15.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC5D0B3))
-                ) {
-                    Text("Edit Profile", color = Color.Black, fontSize = 16.sp)
+        // Tombol Log Out sekarang hanya menampilkan dialog
+        LogoutButton {
+            showLogoutDialog = true
+        }
+    }
+
+    // Panggil dialog bertema jika state-nya true
+    if (showLogoutDialog) {
+        ThemedLogoutDialog(
+            onDismiss = { showLogoutDialog = false },
+            onConfirmLogout = {
+                showLogoutDialog = false
+                navController?.navigate(AlurApp.LOGIN_SCREEN) {
+                    popUpTo(navController.graph.startDestinationId) {
+                        inclusive = true
+                    }
                 }
             }
-        }
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            ProfileActionButton(
-                text = "Resep Favorite",
-                onClick = {
-                    navController?.navigate(AlurApp.FAVORITE_RECIPES_SCREEN)
-                },
-                modifier = Modifier.weight(1f)
-            )
-            ProfileActionButton(
-                text = "Saran/Pengaduan",
-                onClick = {
-                    navController?.navigate(AlurApp.FEEDBACK_SCREEN)
-                },
-                modifier = Modifier.weight(1f)
-            )
-        }
-        Spacer(modifier = Modifier.height(16.dp))
+        )
     }
 }
 
+// Composable baru untuk dialog yang sudah disesuaikan dengan tema
 @Composable
-fun ProfileDisplayField(label: String, value: String) {
-    Box(
+fun ThemedLogoutDialog(
+    onConfirmLogout: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(20.dp),
+        containerColor = Color(0xFFEAE7C6),
+        icon = { Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Log Out Icon", tint = Color(0xFF73946B)) },
+        title = {
+            Text(
+                text = "Confirm Log Out",
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF333D29)
+            )
+        },
+        text = {
+            Text(
+                text = "Are you sure you want to log out from Reseporia?",
+                color = Color(0xFF333D29).copy(alpha = 0.8f)
+            )
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirmLogout,
+                shape = RoundedCornerShape(50),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFC62828),
+                    contentColor = Color.White
+                )
+            ) {
+                Text("Log Out")
+            }
+        },
+        dismissButton = {
+            OutlinedButton(
+                onClick = onDismiss,
+                shape = RoundedCornerShape(50),
+                border = BorderStroke(1.dp, Color.Gray)
+            ) {
+                Text("Cancel", color = Color.Gray)
+            }
+        }
+    )
+}
+
+
+// Semua Composable lainnya tidak perlu diubah
+@Composable
+fun ProfileTopAppBar(navController: NavController?) {
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFFC5D0B3), RoundedCornerShape(10.dp))
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = "$label : ",
-                color = Color.Black,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-            Text(
-                text = value,
-                color = Color.Black,
-                fontSize = 15.sp
-            )
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+            contentDescription = "Kembali",
+            modifier = Modifier
+                .size(28.dp)
+                .clickable { navController?.popBackStack() }
+        )
+        Text(
+            text = "Profile",
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.weight(1f)
+        )
+        Spacer(modifier = Modifier.width(28.dp))
+    }
+}
+
+@Composable
+fun ProfileHeader(fullName: String, email: String, onEditClick: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.profile),
+            contentDescription = "Profile Picture",
+            modifier = Modifier
+                .size(110.dp)
+                .clip(CircleShape)
+                .border(2.dp, Color(0xFF73946B), CircleShape),
+            contentScale = ContentScale.Crop
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(text = fullName, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(text = email, fontSize = 14.sp, color = Color.Gray)
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(
+            onClick = onEditClick,
+            shape = RoundedCornerShape(50),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF73946B))
+        ) {
+            Text("Edit Profile", modifier = Modifier.padding(horizontal = 16.dp))
         }
     }
 }
 
 @Composable
-fun ProfileActionButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Button(
-        onClick = onClick,
-        modifier = modifier.height(55.dp),
-        shape = RoundedCornerShape(10.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF73946B))
+fun StatisticsSection(savedRecipes: Int) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text, color = Color.White, fontSize = 15.sp, textAlign = TextAlign.Center)
+        StatItem(number = savedRecipes, label = "Resep Disimpan")
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFFD2D0A0)
+@Composable
+fun StatItem(number: Int, label: String) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(text = number.toString(), fontWeight = FontWeight.Bold, fontSize = 18.sp)
+        Text(text = label, fontSize = 12.sp, color = Color.Gray)
+    }
+}
+
+@Composable
+fun ProfileMenuItem(icon: ImageVector, text: String, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(imageVector = icon, contentDescription = text, modifier = Modifier.size(24.dp), tint = Color(0xFF73946B))
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(text = text, modifier = Modifier.weight(1f), fontSize = 16.sp)
+        Icon(imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = Color.Gray)
+    }
+}
+
+@Composable
+fun LogoutButton(onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color.Transparent,
+            contentColor = MaterialTheme.colorScheme.error
+        ),
+        elevation = null
+    ) {
+        Icon(imageVector = Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Log Out")
+        Spacer(modifier = Modifier.width(8.dp))
+        Text("Log Out", fontWeight = FontWeight.Bold)
+    }
+}
+
+@Preview(showBackground = true)
 @Composable
 fun ProfileScreenExactPreview() {
     MaterialTheme {
-        ProfileScreenExact(navController = null)
+        ProfileScreenExact(navController = rememberNavController())
     }
 }
