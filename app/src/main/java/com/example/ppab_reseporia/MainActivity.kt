@@ -29,8 +29,10 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppNavigation(navController: androidx.navigation.NavHostController) {
     NavHost(navController = navController, startDestination = AlurApp.LOGIN_SCREEN) {
+
         composable(AlurApp.LOGIN_SCREEN) {
             LoginScreen(
+                navController = navController,
                 onLoginSuccess = {
                     navController.navigate(AlurApp.HOME_SCREEN) {
                         popUpTo(AlurApp.LOGIN_SCREEN) {
@@ -40,37 +42,58 @@ fun AppNavigation(navController: androidx.navigation.NavHostController) {
                 }
             )
         }
+
+        composable(AlurApp.REGISTER_SCREEN) {
+            RegisterScreen(navController = navController)
+        }
+
         composable(AlurApp.HOME_SCREEN) {
             HomeScreen(navController = navController)
         }
+
         composable(
             route = AlurApp.CATEGORY_SCREEN,
             arguments = listOf(navArgument("categoryName") { type = NavType.StringType })
         ) { backStackEntry ->
-        val categoryName = backStackEntry.arguments?.getString("categoryName")
-        CategoryScreen(categoryName = categoryName ?: "Unknown", navController = navController)
-    }
+            val categoryName = backStackEntry.arguments?.getString("categoryName")
+            // Anda perlu membuat file CategoryScreen.kt jika belum ada
+            CategoryScreen(categoryName = categoryName ?: "Unknown", navController = navController)
+        }
         composable(
             route = AlurApp.DETAIL_RECIPE_SCREEN,
             arguments = listOf(navArgument("foodName") { type = NavType.StringType })
         ) { backStackEntry ->
-        val foodName = backStackEntry.arguments?.getString("foodName")
-        val selectedRecipe = allFoodList.find { it.name == foodName }
-        if (selectedRecipe != null) {
-            RecipeDetailScreen(recipe = selectedRecipe, onBack = { navController.popBackStack() })
-        } else {
-            Text("Resep tidak ditemukan!")
+            // 1. Mengambil argumen nama resep dari route
+            val foodName = backStackEntry.arguments?.getString("foodName")
+
+            // 2. Mencari data resep yang cocok di dalam allFoodList
+            val selectedRecipe = allFoodList.find { it.name == foodName }
+
+            // 3. Jika resep ditemukan, tampilkan RecipeDetailScreen dengan data tersebut
+            if (selectedRecipe != null) {
+                RecipeDetailScreen(
+                    recipe = selectedRecipe,
+                    onBack = { navController.popBackStack() }
+                )
+            } else {
+                // Tampilan jika resep (karena alasan tertentu) tidak ditemukan
+                Text("Resep tidak ditemukan!")
+            }
         }
-    }
-        composable(AlurApp.FAVORITE_RECIPES_SCREEN) {
-            ResepFavoritScreen(navController = navController)
-        }
+        // =============================================================
+
         composable(AlurApp.PROFILE_SCREEN) {
             ProfileScreenExact(navController = navController)
         }
+
+        composable(AlurApp.FAVORITE_RECIPES_SCREEN) {
+            ResepFavoritScreen(navController = navController)
+        }
+
         composable(AlurApp.EDIT_PROFILE_SCREEN) {
             EditProfileScreen(navController = navController)
         }
+
         composable(AlurApp.FEEDBACK_SCREEN) {
             FeedbackScreen(navController = navController)
         }

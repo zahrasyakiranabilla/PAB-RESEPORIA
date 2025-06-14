@@ -41,7 +41,7 @@ import com.example.ppab_reseporia.ui.theme.PPABRESEPORIATheme
 fun FeedbackScreen(navController: NavController) {
     var feedbackText by remember { mutableStateOf("") }
 
-    val backgroundColor = Color(0xFFD2D0A0)
+    val backgroundColor = Color(0xFFF0EFE6)
     val greenColor = Color(0xFF7A977B)
 
     Column(
