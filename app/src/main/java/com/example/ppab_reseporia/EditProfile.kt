@@ -1,34 +1,28 @@
 package com.example.ppab_reseporia
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -39,97 +33,124 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 
-val editScreenBackgroundColor = Color(0xFFF0EFE6)
-val editScreenIconBackgroundColor = Color(0xFFE0E5D6)
-val editScreenButtonColor = Color(0xFF8F9D7F)
-val editScreenTextColor = Color(0xFF333333)
-val editScreenLineColor = Color.Black
+// Definisi warna agar mudah diakses
+private val editScreenBackgroundColor = Color(0xFFF0EFE6)
+private val editScreenButtonColor = Color(0xFF73946B) // Warna hijau primer
+private val editScreenTextColor = Color(0xFF333D29) // Hijau sangat tua untuk teks
 
 @Composable
 fun EditProfileScreen(navController: NavController? = null) {
-    // masih menggunakan username dan email dummy
-    var username by remember { mutableStateOf("Zahra Syakira Nabilla") }
-    var email by remember { mutableStateOf("zahrasyakiranabilla@gmail.com") }
+    // State untuk setiap field
+    var fullName by remember { mutableStateOf("Zahra Syakira Nabilla") }
+    var username by remember { mutableStateOf("zahrasyakira") }
+    var bio by remember { mutableStateOf("Passionate home cook, loves baking desserts.") }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(editScreenBackgroundColor)
-            .padding(top = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Box(
+    Scaffold(
+        topBar = {
+            EditProfileTopAppBar { navController?.popBackStack() }
+        },
+        containerColor = editScreenBackgroundColor
+    ) { paddingValues ->
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp, horizontal = 16.dp),
-            contentAlignment = Alignment.Center
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(horizontal = 24.dp)
+                .verticalScroll(rememberScrollState()), // Membuat layar bisa di-scroll
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.panah),
-                contentDescription = "Kembali",
-                modifier = Modifier
-                    .size(28.dp)
-                    .align(Alignment.CenterStart)
-                    .clickable { navController?.popBackStack() }
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Composable baru untuk foto profil yang bisa diedit
+            ProfilePictureEditor(
+                onEditClick = { /* Logika untuk ganti foto */ }
             )
 
-            Text(
-                text = "Edit Profile",
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-                color = editScreenTextColor,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Field untuk Full Name (contoh tambahan)
+            EditableProfileField(
+                value = fullName,
+                onValueChange = { fullName = it },
+                label = "Full Name",
+                leadingIcon = Icons.Default.Person
             )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Field untuk Username
+            EditableProfileField(
+                value = username,
+                onValueChange = { username = it },
+                label = "Username",
+                leadingIcon = Icons.Default.Person // Bisa diganti dengan ikon lain
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Field untuk Bio (multi-line)
+            EditableProfileField(
+                value = bio,
+                onValueChange = { bio = it },
+                label = "Bio",
+                singleLine = false, // Atur agar bisa multi-baris
+                maxLines = 4 // Batasi jumlah baris
+            )
+
+            // Spacer untuk mendorong tombol ke bawah jika konten sedikit
+            Spacer(modifier = Modifier.weight(1f))
+
+            // Composable baru untuk baris tombol aksi
+            ActionButtonsRow(
+                onCancelClick = { navController?.popBackStack() },
+                onSaveClick = {
+                    // Logika untuk menyimpan perubahan
+                    println("Perubahan disimpan!")
+                    navController?.popBackStack()
+                }
+            )
+            Spacer(modifier = Modifier.height(24.dp))
         }
+    }
+}
 
-        Spacer(modifier = Modifier.height(40.dp))
+// -- Helper Composables untuk membuat UI lebih bersih --
 
-        Box(
-            modifier = Modifier
-                .size(160.dp)
-                .clip(CircleShape)
-                .background(editScreenIconBackgroundColor),
-            contentAlignment = Alignment.Center
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.profile),
-                contentDescription = "Profile picture placeholder",
-                modifier = Modifier.size(108.dp),
-                contentScale = ContentScale.Fit
-            )
-        }
-
-        Spacer(modifier = Modifier.height(40.dp))
-
-        EditableProfileField(
-            label = "Username",
-            value = username,
-            onValueChange = { username = it }
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-
-        EditableProfileField(
-            label = "Email",
-            value = email,
-            onValueChange = { email = it },
-            keyboardType = KeyboardType.Email
-        )
-        Spacer(modifier = Modifier.height(40.dp))
-
-        ActionButton(
-            text = "Simpan Perubahan",
-            onClick = {
-                navController?.popBackStack()
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EditProfileTopAppBar(onBackClick: () -> Unit) {
+    // GANTI "TopAppBar" menjadi "CenterAlignedTopAppBar"
+    CenterAlignedTopAppBar(
+        title = { Text("Edit Profile", fontWeight = FontWeight.Bold, color = editScreenTextColor) },
+        navigationIcon = {
+            IconButton(onClick = onBackClick) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Kembali")
             }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+    )
+}
+@Composable
+fun ProfilePictureEditor(onEditClick: () -> Unit) {
+    Box(contentAlignment = Alignment.BottomEnd) {
+        Image(
+            painter = painterResource(id = R.drawable.profile),
+            contentDescription = "Profile Picture",
+            modifier = Modifier
+                .size(120.dp)
+                .clip(CircleShape)
+                .border(3.dp, editScreenButtonColor, CircleShape),
+            contentScale = ContentScale.Crop
         )
-        Spacer(modifier = Modifier.height(16.dp))
-        ActionButton(
-            text = "Batal",
-            onClick = { navController?.popBackStack() }
-        )
-        Spacer(modifier = Modifier.height(16.dp))
+        IconButton(
+            onClick = onEditClick,
+            modifier = Modifier
+                .size(36.dp)
+                .clip(CircleShape)
+                .background(editScreenButtonColor)
+        ) {
+            Icon(Icons.Default.CameraAlt, contentDescription = "Edit Foto", tint = Color.White)
+        }
     }
 }
 
@@ -138,56 +159,68 @@ fun EditableProfileField(
     value: String,
     onValueChange: (String) -> Unit,
     label: String,
-    keyboardType: KeyboardType = KeyboardType.Text
+    leadingIcon: ImageVector? = null,
+    singleLine: Boolean = true,
+    maxLines: Int = 1
 ) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        label = {
-            Text(
-                text = label,
-                color = editScreenTextColor,
-                fontSize = 16.sp
-            )
-        },
-        modifier = Modifier.fillMaxWidth(0.85f),
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        singleLine = true,
+        label = { Text(label) },
+        modifier = Modifier.fillMaxWidth(),
+        singleLine = singleLine,
+        maxLines = maxLines,
         textStyle = TextStyle(color = editScreenTextColor, fontSize = 16.sp),
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = Color.Transparent,
-            unfocusedContainerColor = Color.Transparent,
-            disabledContainerColor = Color.Transparent,
-            focusedIndicatorColor = editScreenLineColor,
-            unfocusedIndicatorColor = editScreenLineColor.copy(alpha = 0.7f),
-            cursorColor = editScreenTextColor,
-            focusedLabelColor = editScreenTextColor,
-            unfocusedLabelColor = editScreenTextColor.copy(alpha = 0.7f)
+        leadingIcon = {
+            if (leadingIcon != null) {
+                Icon(leadingIcon, contentDescription = label, tint = editScreenTextColor.copy(alpha = 0.7f))
+            }
+        },
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = editScreenButtonColor,
+            unfocusedBorderColor = Color.Gray,
+            cursorColor = editScreenButtonColor,
+            focusedLabelColor = editScreenButtonColor,
         )
     )
 }
 
 @Composable
-fun ActionButton(text: String, onClick: () -> Unit) {
-    Button(
-        onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth(0.75f)
-            .height(50.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = editScreenButtonColor,
-            contentColor = Color.White
-        )
+fun ActionButtonsRow(onCancelClick: () -> Unit, onSaveClick: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text(text = text, fontSize = 16.sp, fontWeight = FontWeight.Medium)
+        // Tombol Batal (sekunder)
+        OutlinedButton(
+            onClick = onCancelClick,
+            modifier = Modifier
+                .weight(1f)
+                .height(50.dp),
+            shape = RoundedCornerShape(50),
+            border = BorderStroke(1.dp, Color.Gray)
+        ) {
+            Text("Batal", color = Color.Gray)
+        }
+        // Tombol Simpan (primer)
+        Button(
+            onClick = onSaveClick,
+            modifier = Modifier
+                .weight(1f)
+                .height(50.dp),
+            shape = RoundedCornerShape(50),
+            colors = ButtonDefaults.buttonColors(containerColor = editScreenButtonColor)
+        ) {
+            Text("Simpan Perubahan")
+        }
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFFF0EFE6)
+
+@Preview(showBackground = true)
 @Composable
 fun EditProfileScreenPreview() {
     MaterialTheme {
-        EditProfileScreen(navController = null)
+        EditProfileScreen(rememberNavController())
     }
 }

@@ -4,62 +4,54 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.keyframes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.ppab_reseporia.ui.theme.PPABRESEPORIATheme
+import com.example.ppab_reseporia.ui.theme.PoppinsFamily
 
 val GreenBackground = Color(0xFF73946B)
-val LightBeigeBackground = Color(0xFFD2D0A0)
+val LightBeigeBackground = Color(0xFFF0EFE6)
 val TextColorInsideCard = Color.White
 val ButtonTextColor = Color(0xFF000000)
 val TextFieldLineColor = Color.White
 
 @Composable
 fun LoginScreen(
+    navController: NavController,
     onLoginSuccess: () -> Unit,
     loginViewModel: LoginViewModel = viewModel()
 ) {
 
-    val username = loginViewModel.username
+    // Variabel username dihapus
     val email = loginViewModel.email
     val password = loginViewModel.password
     val shakeButtonTrigger = loginViewModel.shakeButtonTrigger
 
-    val fieldsNotEmpty = username.isNotBlank() && email.isNotBlank() && password.isNotBlank()
+    // Validasi diubah, tidak lagi memeriksa username
+    val fieldsNotEmpty = email.isNotBlank() && password.isNotBlank()
 
     val buttonOffsetX = remember { Animatable(0f) }
 
@@ -83,6 +75,17 @@ fun LoginScreen(
                 }
             )
         }
+    }
+
+    val annotatedString = buildAnnotatedString {
+        withStyle(style = SpanStyle(color = Color.White, fontSize = 14.sp)) {
+            append("Don't have an account? ")
+        }
+        pushStringAnnotation(tag = "SIGNUP", annotation = "SIGNUP")
+        withStyle(style = SpanStyle(color = Color(0xFFF0EFE6), fontWeight = FontWeight.Bold, fontSize = 14.sp)) {
+            append("Sign Up here!")
+        }
+        pop()
     }
 
     Box(
@@ -123,21 +126,14 @@ fun LoginScreen(
                     Text(
                         text = "Reseporia",
                         fontSize = 24.sp,
-                        fontWeight = FontWeight.SemiBold,
+                        fontFamily = PoppinsFamily,
+                        fontWeight = FontWeight.Bold,
                         color = TextColorInsideCard,
                     )
 
                     Spacer(modifier = Modifier.height(32.dp))
 
-                    LoginTextField(
-                        value = username,
-                        onValueChange = { loginViewModel.updateUsername(it) },
-                        labelText = "Username",
-                        placeholderText = "Masukkan username",
-                        fontWeight = FontWeight.Light
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
+                    // TextField untuk Username dan Spacernya DIHAPUS dari sini
 
                     LoginTextField(
                         value = email,
@@ -179,10 +175,22 @@ fun LoginScreen(
                             .offset(x = buttonOffsetX.value.dp)
                     ) {
                         Text(
-                            text = "Masuk",
+                            text = "Log In",
                             fontSize = 16.sp
                         )
                     }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    ClickableText(
+                        text = annotatedString,
+                        onClick = { offset ->
+                            annotatedString.getStringAnnotations(tag = "SIGNUP", start = offset, end = offset)
+                                .firstOrNull()?.let {
+                                    navController.navigate(AlurApp.REGISTER_SCREEN)
+                                }
+                        }
+                    )
                 }
             }
         }
@@ -229,10 +237,10 @@ fun LoginTextField(
     )
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFFE8E6D8)
+@Preview(showBackground = true)
 @Composable
 fun LoginScreenPreview() {
     PPABRESEPORIATheme {
-        LoginScreen(onLoginSuccess = {})
+        LoginScreen(navController = rememberNavController(), onLoginSuccess = {})
     }
 }
