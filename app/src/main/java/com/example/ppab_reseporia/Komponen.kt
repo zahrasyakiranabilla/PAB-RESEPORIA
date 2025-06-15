@@ -252,12 +252,12 @@ fun CategoryTabs(
                             shape = RoundedCornerShape(20.dp)
                         )
                         .clickable { onCategorySelected(category) }
-                        .padding(horizontal = 16.dp, vertical = 10.dp)
+                        .padding(horizontal = 12.dp, vertical = 10.dp)
                 ) {
                     Text(
                         text = category,
                         color = if (selectedCategory == category) Color.White else Color.Black,
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold  // Semua text bold
                     )
                 }
