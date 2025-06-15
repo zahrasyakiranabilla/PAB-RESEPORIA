@@ -218,7 +218,7 @@ fun CategoryScreen(categoryName: String, navController: NavController) {
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                     color = Color.Black,
                     modifier = Modifier.weight(1f),
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Start
                 )
 
                 Box(

@@ -33,7 +33,7 @@ import com.example.ppab_reseporia.ui.theme.PPABRESEPORIATheme
 import com.example.ppab_reseporia.ui.theme.PoppinsFamily
 
 val GreenBackground = Color(0xFF73946B)
-val LightBeigeBackground = Color(0xFFF0EFE6)
+val LightBeigeBackground = Color(0xFFF0ECCF)
 val TextColorInsideCard = Color.White
 val ButtonTextColor = Color(0xFF000000)
 val TextFieldLineColor = Color.White

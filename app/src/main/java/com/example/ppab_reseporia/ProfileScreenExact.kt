@@ -42,7 +42,7 @@ fun ProfileScreenExact(navController: NavController? = null) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF0EFE6)) // Warna latar belakang utama
+            .background(Color(0xFFF0ECCF)) // Warna latar belakang utama
     ) {
         ProfileTopAppBar(navController)
         ProfileHeader(fullName, email) {

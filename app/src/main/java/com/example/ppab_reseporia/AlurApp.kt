@@ -2,6 +2,7 @@ package com.example.ppab_reseporia
 
 object AlurApp {
     const val SPLASH_SCREEN = "splash"
+    const val LOGIN_OR_REGISTER_SCREEN = "loginOrRegister"
     const val LOGIN_SCREEN = "login"
     const val REGISTER_SCREEN = "register"
     const val HOME_SCREEN = "home"

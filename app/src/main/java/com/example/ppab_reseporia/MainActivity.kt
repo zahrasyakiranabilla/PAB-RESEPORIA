@@ -28,14 +28,18 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun AppNavigation(navController: androidx.navigation.NavHostController) {
-    NavHost(navController = navController, startDestination = AlurApp.LOGIN_SCREEN) {
+    NavHost(navController = navController, startDestination = AlurApp.LOGIN_OR_REGISTER_SCREEN) {
+
+        composable(AlurApp.LOGIN_OR_REGISTER_SCREEN) {
+            LoginOrRegisterScreenContent(navController = navController)
+        }
 
         composable(AlurApp.LOGIN_SCREEN) {
             LoginScreen(
                 navController = navController,
                 onLoginSuccess = {
                     navController.navigate(AlurApp.HOME_SCREEN) {
-                        popUpTo(AlurApp.LOGIN_SCREEN) {
+                        popUpTo(AlurApp.LOGIN_OR_REGISTER_SCREEN) { // Pop dari Login/Register screen
                             inclusive = true
                         }
                     }
@@ -56,7 +60,6 @@ fun AppNavigation(navController: androidx.navigation.NavHostController) {
             arguments = listOf(navArgument("categoryName") { type = NavType.StringType })
         ) { backStackEntry ->
             val categoryName = backStackEntry.arguments?.getString("categoryName")
-            // Anda perlu membuat file CategoryScreen.kt jika belum ada
             CategoryScreen(categoryName = categoryName ?: "Unknown", navController = navController)
         }
 
@@ -64,25 +67,18 @@ fun AppNavigation(navController: androidx.navigation.NavHostController) {
             route = AlurApp.DETAIL_RECIPE_SCREEN,
             arguments = listOf(navArgument("foodName") { type = NavType.StringType })
         ) { backStackEntry ->
-            // 1. Mengambil argumen nama resep dari route
             val foodName = backStackEntry.arguments?.getString("foodName")
-
-            // 2. Mencari data resep yang cocok di dalam allFoodList
             val selectedRecipe = allFoodList.find { it.name == foodName }
-
-            // 3. Jika resep ditemukan, tampilkan RecipeDetailScreen dengan data tersebut
             if (selectedRecipe != null) {
                 RecipeDetailScreen(
                     recipe = selectedRecipe,
-                    navController = navController,  // ← Ini yang kurang!
+                    navController = navController,
                     onBack = { navController.popBackStack() }
                 )
             } else {
-                // Tampilan jika resep (karena alasan tertentu) tidak ditemukan
                 Text("Resep tidak ditemukan!")
             }
         }
-        // =============================================================
 
         composable(AlurApp.PROFILE_SCREEN) {
             ProfileScreenExact(navController = navController)

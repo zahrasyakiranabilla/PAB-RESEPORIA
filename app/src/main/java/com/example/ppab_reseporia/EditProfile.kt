@@ -35,14 +35,12 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 
-// Definisi warna agar mudah diakses
-private val editScreenBackgroundColor = Color(0xFFF0EFE6)
-private val editScreenButtonColor = Color(0xFF73946B) // Warna hijau primer
-private val editScreenTextColor = Color(0xFF333D29) // Hijau sangat tua untuk teks
+private val editScreenBackgroundColor = Color(0xFFF0ECCF)
+private val editScreenButtonColor = Color(0xFF73946B)
+private val editScreenTextColor = Color(0xFF333D29)
 
 @Composable
 fun EditProfileScreen(navController: NavController? = null) {
-    // State untuk setiap field
     var fullName by remember { mutableStateOf("Zahra Syakira Nabilla") }
     var username by remember { mutableStateOf("zahrasyakira") }
     var bio by remember { mutableStateOf("Passionate home cook, loves baking desserts.") }
@@ -58,7 +56,7 @@ fun EditProfileScreen(navController: NavController? = null) {
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(horizontal = 24.dp)
-                .verticalScroll(rememberScrollState()), // Membuat layar bisa di-scroll
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(24.dp))
@@ -196,7 +194,7 @@ fun ActionButtonsRow(onCancelClick: () -> Unit, onSaveClick: () -> Unit) {
             onClick = onCancelClick,
             modifier = Modifier
                 .weight(1f)
-                .height(50.dp),
+                .height(55.dp),
             shape = RoundedCornerShape(50),
             border = BorderStroke(1.dp, Color.Gray)
         ) {
@@ -207,11 +205,15 @@ fun ActionButtonsRow(onCancelClick: () -> Unit, onSaveClick: () -> Unit) {
             onClick = onSaveClick,
             modifier = Modifier
                 .weight(1f)
-                .height(50.dp),
+                .height(55.dp),
             shape = RoundedCornerShape(50),
             colors = ButtonDefaults.buttonColors(containerColor = editScreenButtonColor)
         ) {
-            Text("Simpan Perubahan")
+            Text(
+                text = "Simpan Perubahan",
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
         }
     }
 }
