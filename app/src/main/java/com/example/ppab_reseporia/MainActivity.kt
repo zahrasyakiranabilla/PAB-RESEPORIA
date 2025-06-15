@@ -48,7 +48,7 @@ fun AppNavigation(navController: androidx.navigation.NavHostController) {
         }
 
         composable(AlurApp.HOME_SCREEN) {
-            HomeScreen(navController = navController)
+            HomeScreen(navController = navController, foodList = allFoodList)
         }
 
         composable(
@@ -59,6 +59,7 @@ fun AppNavigation(navController: androidx.navigation.NavHostController) {
             // Anda perlu membuat file CategoryScreen.kt jika belum ada
             CategoryScreen(categoryName = categoryName ?: "Unknown", navController = navController)
         }
+
         composable(
             route = AlurApp.DETAIL_RECIPE_SCREEN,
             arguments = listOf(navArgument("foodName") { type = NavType.StringType })
@@ -73,6 +74,7 @@ fun AppNavigation(navController: androidx.navigation.NavHostController) {
             if (selectedRecipe != null) {
                 RecipeDetailScreen(
                     recipe = selectedRecipe,
+                    navController = navController,  // ← Ini yang kurang!
                     onBack = { navController.popBackStack() }
                 )
             } else {

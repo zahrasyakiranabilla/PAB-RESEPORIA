@@ -1,5 +1,6 @@
 package com.example.ppab_reseporia
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,15 +18,23 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,57 +43,186 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 
+@Composable
+fun CategoryTopBar(
+    navController: NavController,
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit,
+    onBack: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0xFF5F8150))
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Back button + Logo
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Back",
+                tint = Color.White,
+                modifier = Modifier
+                    .clickable { onBack() }
+                    .size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Image(
+                painter = painterResource(R.drawable.logoreseporia),
+                contentDescription = "Logo",
+                modifier = Modifier
+                    .size(40.dp)
+                    .clickable {
+                        // Navigate balik ke homepage dan clear back stack
+                        navController.navigate(AlurApp.HOME_SCREEN) {
+                            popUpTo(AlurApp.HOME_SCREEN) {
+                                inclusive = true
+                            }
+                        }
+                    }
+            )
+        }
+
+        // Search field
+        TextField(
+            value = searchQuery,
+            onValueChange = onSearchQueryChange,
+            placeholder = {
+                Text(
+                    "Search...",
+                    color = Color.Gray
+                )
+            },
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 8.dp),
+            shape = RoundedCornerShape(24.dp),
+            colors = TextFieldDefaults.colors(
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                disabledIndicatorColor = Color.Transparent,
+                errorIndicatorColor = Color.Transparent,
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White
+            ),
+            leadingIcon = {
+                Icon(
+                    Icons.Default.Search,
+                    contentDescription = "Search",
+                    tint = Color.Gray
+                )
+            },
+            trailingIcon = {
+                if (searchQuery.isNotEmpty()) {
+                    IconButton(
+                        onClick = { onSearchQueryChange("") }
+                    ) {
+                        Icon(
+                            Icons.Default.Clear,
+                            contentDescription = "Clear",
+                            tint = Color.Gray
+                        )
+                    }
+                }
+            },
+            singleLine = true
+        )
+
+        // Right icons
+        Icon(
+            Icons.Default.Favorite,
+            contentDescription = "Favorite",
+            tint = Color.White,
+            modifier = Modifier.clickable {
+                navController.navigate(AlurApp.FAVORITE_RECIPES_SCREEN)
+            }
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Icon(
+            Icons.Default.Person,
+            contentDescription = "Profile",
+            tint = Color.White,
+            modifier = Modifier.clickable {
+                navController.navigate(AlurApp.PROFILE_SCREEN)
+            }
+        )
+    }
+}
 
 @Composable
 fun CategoryScreen(categoryName: String, navController: NavController) {
     var selectedSortOption by remember { mutableStateOf("Default") }
     var expanded by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+
     val initialFilteredList = allFoodList.filter { it.category == categoryName }
-    val sortedFoodList = remember(initialFilteredList, selectedSortOption) {
+
+    // Filter berdasarkan search query dan sort
+    val filteredAndSortedList = remember(initialFilteredList, selectedSortOption, searchQuery) {
+        val searchFiltered = if (searchQuery.isBlank()) {
+            initialFilteredList
+        } else {
+            initialFilteredList.filter {
+                it.name.contains(searchQuery, ignoreCase = true)
+            }
+        }
+
         when (selectedSortOption) {
-            "Rating" -> initialFilteredList.sortedByDescending { it.rating }
-            "Waktu Memasak" -> initialFilteredList.sortedBy { it.time }
-            "Terpopuler" -> initialFilteredList.sortedByDescending { it.likes }
-            "Nama" -> initialFilteredList.sortedBy { it.name }
-            else -> initialFilteredList //sesuai urutan data
+            "Rating" -> searchFiltered.sortedByDescending { it.rating }
+            "Waktu Memasak" -> searchFiltered.sortedBy { it.time }
+            "Terpopuler" -> searchFiltered.sortedByDescending { it.likes }
+            "Nama" -> searchFiltered.sortedBy { it.name }
+            else -> searchFiltered //sesuai urutan data
         }
     }
 
     Scaffold(
         topBar = {
+            CategoryTopBar(
+                navController = navController,
+                searchQuery = searchQuery,
+                onSearchQueryChange = { searchQuery = it },
+                onBack = { navController.popBackStack() }
+            )
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .background(Color(0xFFF0ECCF))
+        ) {
+            // Category name + Sort dropdown
             Row(
-                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFFF0ECCF))
                     .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        modifier = Modifier
-                            .size(28.dp)
-                            .clickable { navController.popBackStack() }
-                    )
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Text(
-                        text = categoryName,
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                        color = Color.Black
-                    )
-                }
+                Text(
+                    text = categoryName,
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                    color = Color.Black,
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.Center
+                )
 
                 Box(
-                    modifier = Modifier
-                        .wrapContentSize(Alignment.TopEnd)
+                    modifier = Modifier.wrapContentSize(Alignment.TopEnd)
                 ) {
                     Row(
                         modifier = Modifier
@@ -149,21 +287,19 @@ fun CategoryScreen(categoryName: String, navController: NavController) {
                     }
                 }
             }
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .background(Color(0xFFF0ECCF))
-        ) {
-            if (sortedFoodList.isEmpty()) {
+
+            // Food Grid
+            if (filteredAndSortedList.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Tidak ada resep untuk kategori ini.",
+                        text = if (searchQuery.isBlank()) {
+                            "Tidak ada resep untuk kategori ini."
+                        } else {
+                            "Tidak ada resep yang ditemukan untuk \"$searchQuery\""
+                        },
                         style = MaterialTheme.typography.bodyLarge,
                         color = Color.Gray
                     )
@@ -178,7 +314,7 @@ fun CategoryScreen(categoryName: String, navController: NavController) {
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    items(sortedFoodList) { food ->
+                    items(filteredAndSortedList) { food ->
                         FoodItem(
                             name = food.name,
                             imageRes = food.imageRes,

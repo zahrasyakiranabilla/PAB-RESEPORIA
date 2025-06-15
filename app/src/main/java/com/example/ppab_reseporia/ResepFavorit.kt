@@ -20,13 +20,23 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,11 +44,122 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+
+@Composable
+fun FavoriteTopBar(
+    navController: NavController,
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit,
+    onBack: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0xFF5F8150))
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Back button + Logo
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Back",
+                tint = Color.White,
+                modifier = Modifier
+                    .clickable { onBack() }
+                    .size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Image(
+                painter = painterResource(R.drawable.logoreseporia),
+                contentDescription = "Logo",
+                modifier = Modifier
+                    .size(40.dp)
+                    .clickable {
+                        // Navigate balik ke homepage dan clear back stack
+                        navController.navigate(AlurApp.HOME_SCREEN) {
+                            popUpTo(AlurApp.HOME_SCREEN) {
+                                inclusive = true
+                            }
+                        }
+                    }
+            )
+        }
+
+        // Search field
+        TextField(
+            value = searchQuery,
+            onValueChange = onSearchQueryChange,
+            placeholder = {
+                Text(
+                    "Search...",
+                    color = Color.Gray
+                )
+            },
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 8.dp),
+            shape = RoundedCornerShape(24.dp),
+            colors = TextFieldDefaults.colors(
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                disabledIndicatorColor = Color.Transparent,
+                errorIndicatorColor = Color.Transparent,
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White
+            ),
+            leadingIcon = {
+                Icon(
+                    Icons.Default.Search,
+                    contentDescription = "Search",
+                    tint = Color.Gray
+                )
+            },
+            trailingIcon = {
+                if (searchQuery.isNotEmpty()) {
+                    IconButton(
+                        onClick = { onSearchQueryChange("") }
+                    ) {
+                        Icon(
+                            Icons.Default.Clear,
+                            contentDescription = "Clear",
+                            tint = Color.Gray
+                        )
+                    }
+                }
+            },
+            singleLine = true
+        )
+
+        // Right icons
+        Icon(
+            Icons.Default.Favorite,
+            contentDescription = "Favorite",
+            tint = Color.White,
+            modifier = Modifier.clickable {
+                // Already in favorite screen, could do nothing or refresh
+            }
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Icon(
+            Icons.Default.Person,
+            contentDescription = "Profile",
+            tint = Color.White,
+            modifier = Modifier.clickable {
+                navController.navigate(AlurApp.PROFILE_SCREEN)
+            }
+        )
+    }
+}
 
 @Preview(showBackground = true)
 @Composable
@@ -50,31 +171,27 @@ fun ResepFavoritScreenPreview() {
 fun ResepFavoritScreen(navController: NavController) {
     // Masih menampilkan semua resep sebagai "favorit"
     val favoriteFoodList = allFoodList
+    var searchQuery by remember { mutableStateOf("") }
+
+    // Filter berdasarkan search query
+    val filteredFavoriteList = remember(favoriteFoodList, searchQuery) {
+        if (searchQuery.isBlank()) {
+            favoriteFoodList
+        } else {
+            favoriteFoodList.filter {
+                it.name.contains(searchQuery, ignoreCase = true)
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
-            // Back Icon and Title
-            
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFFF0EFE6))
-                    .padding(16.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    modifier = Modifier
-                        .size(28.dp)
-                        .clickable { navController.popBackStack() }
-                )
-                Spacer(modifier = Modifier.width(16.dp))
-                Text(
-                    text = "Resep Favorit",
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-                )
-            }
+            FavoriteTopBar(
+                navController = navController,
+                searchQuery = searchQuery,
+                onSearchQueryChange = { searchQuery = it },
+                onBack = { navController.popBackStack() }
+            )
         }
     ) { paddingValues ->
         Column(
@@ -83,25 +200,73 @@ fun ResepFavoritScreen(navController: NavController) {
                 .padding(paddingValues)
                 .background(Color(0xFFF0ECCF))
         ) {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
+            // Title di content area
+            Text(
+                text = "Resep Favorit",
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                color = Color.Black,
+                textAlign = TextAlign.Center,
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp),
-                contentPadding = PaddingValues(4.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                items(favoriteFoodList.size) { index ->
-                    val food = favoriteFoodList[index]
-                    FoodList(
-                        name = food.name,
-                        imageRes = food.imageRes,
-                        rating = food.rating,
-                        likes = food.likes,
-                        time = food.time,
-                        onClick = { navController.navigate(AlurApp.getDetailRecipeRoute(food.name)) }
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            )
+
+            if (filteredFavoriteList.isEmpty()) {
+                // Empty state
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        Icons.Default.Favorite,
+                        contentDescription = "No Favorites",
+                        tint = Color.Gray,
+                        modifier = Modifier.size(64.dp)
                     )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = if (searchQuery.isBlank()) {
+                            "Belum ada resep favorit"
+                        } else {
+                            "Tidak ada resep favorit yang ditemukan untuk \"$searchQuery\""
+                        },
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color.Gray,
+                        textAlign = TextAlign.Center
+                    )
+                    if (searchQuery.isBlank()) {
+                        Text(
+                            text = "Tambahkan resep ke favorit dari halaman detail",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.Gray,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            } else {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(3),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp),
+                    contentPadding = PaddingValues(4.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    items(filteredFavoriteList.size) { index ->
+                        val food = filteredFavoriteList[index]
+                        FoodList(
+                            name = food.name,
+                            imageRes = food.imageRes,
+                            rating = food.rating,
+                            likes = food.likes,
+                            time = food.time,
+                            onClick = { navController.navigate(AlurApp.getDetailRecipeRoute(food.name)) }
+                        )
+                    }
                 }
             }
         }
