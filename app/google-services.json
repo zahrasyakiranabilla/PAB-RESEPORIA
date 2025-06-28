@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "364737108994",
+    "project_id": "reseporia-c2dda",
+    "storage_bucket": "reseporia-c2dda.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:364737108994:android:a8364b3b6f735212d31b1b",
+        "android_client_info": {
+          "package_name": "com.example.ppab_reseporia"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB-iE43Xlosfr6UVaBvfgO3pUcK9EUDQBI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

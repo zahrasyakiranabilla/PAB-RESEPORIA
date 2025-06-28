@@ -1,5 +1,6 @@
 package com.example.ppab_reseporia
 
+import com.google.firebase.auth.FirebaseAuth
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -117,7 +118,7 @@ fun RegisterScreen(navController: NavController) {
                         onClick = {
                             registerViewModel.onRegisterClick(
                                 onRegisterSuccess = {
-                                    navController.navigate(AlurApp.HOME_SCREEN) {
+                                    navController.navigate(AlurApp.LOGIN_SCREEN) {
                                         popUpTo(navController.graph.startDestinationId) { inclusive = true }
                                     }
                                 }
