@@ -1,175 +1,214 @@
 package com.example.ppab_reseporia
 
-import androidx.compose.foundation.BorderStroke
+import android.util.Log
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ExitToApp
-import androidx.compose.material.icons.automirrored.filled.HelpOutline
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.*
+import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 
 @Composable
-fun ProfileScreenExact(navController: NavController? = null) {
-    val fullName = "Zahra Syakira Nabilla"
-    val email = "zahrasyakiranabilla@gmail.com"
+fun ProfileScreenExact(navController: NavController) {
+    var fullName by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var bio by remember { mutableStateOf("") }
 
-    // State untuk mengontrol dialog
-    var showLogoutDialog by remember { mutableStateOf(false) }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF0ECCF)) // Warna latar belakang utama
-    ) {
-        ProfileTopAppBar(navController)
-        ProfileHeader(fullName, email) {
-            navController?.navigate(AlurApp.EDIT_PROFILE_SCREEN)
-        }
-        Spacer(modifier = Modifier.height(24.dp))
-        StatisticsSection(savedRecipes = 9)
-        Spacer(modifier = Modifier.height(16.dp))
-        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-            ProfileMenuItem(
-                icon = Icons.Default.FavoriteBorder,
-                text = "Resep Favorit",
-                onClick = { navController?.navigate(AlurApp.FAVORITE_RECIPES_SCREEN) }
-            )
-            Divider()
-            ProfileMenuItem(
-                icon = Icons.AutoMirrored.Filled.HelpOutline,
-                text = "Saran & Pengaduan",
-                onClick = { navController?.navigate(AlurApp.FEEDBACK_SCREEN) }
-            )
-        }
-        Spacer(modifier = Modifier.weight(1f))
-
-        // Tombol Log Out sekarang hanya menampilkan dialog
-        LogoutButton {
-            showLogoutDialog = true
-        }
-    }
-
-    // Panggil dialog bertema jika state-nya true
-    if (showLogoutDialog) {
-        ThemedLogoutDialog(
-            onDismiss = { showLogoutDialog = false },
-            onConfirmLogout = {
-                showLogoutDialog = false
-                navController?.navigate(AlurApp.LOGIN_SCREEN) {
-                    popUpTo(navController.graph.startDestinationId) {
-                        inclusive = true
+    LaunchedEffect(Unit) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+        if (uid != null) {
+            FirebaseFirestore.getInstance().collection("users").document(uid)
+                .get()
+                .addOnSuccessListener { document ->
+                    if (document != null) {
+                        fullName = document.getString("fullName") ?: ""
+                        email = document.getString("email") ?: ""
+                        bio = document.getString("bio") ?: ""
                     }
                 }
-            }
-        )
+                .addOnFailureListener { e ->
+                    Log.e("Firestore", "❌ Gagal ambil data user: ${e.message}")
+                }
+        }
     }
-}
 
-// Composable baru untuk dialog yang sudah disesuaikan dengan tema
-@Composable
-fun ThemedLogoutDialog(
-    onConfirmLogout: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(20.dp),
-        containerColor = Color(0xFFEAE7C6),
-        icon = { Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Log Out Icon", tint = Color(0xFF73946B)) },
-        title = {
-            Text(
-                text = "Confirm Log Out",
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF333D29)
-            )
-        },
-        text = {
-            Text(
-                text = "Are you sure you want to log out from Reseporia?",
-                color = Color(0xFF333D29).copy(alpha = 0.8f)
-            )
-        },
-        confirmButton = {
-            Button(
-                onClick = onConfirmLogout,
-                shape = RoundedCornerShape(50),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFC62828),
-                    contentColor = Color.White
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = Color(0xFFF0ECCF)
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            // Content
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = 72.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                ProfileHeader(
+                    fullName = fullName,
+                    email = email,
+                    bio = bio,
+                    onEditClick = {
+                        navController.navigate(AlurApp.EDIT_PROFILE_SCREEN)
+                    }
                 )
-            ) {
-                Text("Log Out")
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Stats section - Resep Disimpan
+                Text(
+                    text = "9",
+                    fontSize = 29.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
+                )
+                Text(
+                    text = "Resep Disimpan",
+                    fontSize = 14.sp,
+                    color = Color.Gray
+                )
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // Menu Items
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                ) {
+                    // Resep Favorit
+                    MenuItemRow(
+                        icon = Icons.Default.Favorite,
+                        title = "Resep Favorit",
+                        onClick = { navController.navigate(AlurApp.FAVORITE_RECIPES_SCREEN) }
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Saran & Pengaduan
+                    MenuItemRow(
+                        icon = Icons.Default.Info,
+                        title = "Saran & Pengaduan",
+                        onClick = { navController.navigate(AlurApp.FEEDBACK_SCREEN) }
+                    )
+                }
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                LogoutButton(navController)
             }
-        },
-        dismissButton = {
-            OutlinedButton(
-                onClick = onDismiss,
-                shape = RoundedCornerShape(50),
-                border = BorderStroke(1.dp, Color.Gray)
+
+            // Top Bar dengan tombol back
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                color = Color.Transparent
             ) {
-                Text("Cancel", color = Color.Gray)
+                Box(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    IconButton(
+                        onClick = { navController.navigate(AlurApp.HOME_SCREEN) },
+                        modifier = Modifier.align(Alignment.CenterStart)
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color.Black
+                        )
+                    }
+                    Text(
+                        text = "Profile",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.align(Alignment.Center),
+                        color = Color.Black
+                    )
+                }
             }
         }
-    )
-}
-
-
-// Semua Composable lainnya tidak perlu diubah
-@Composable
-fun ProfileTopAppBar(navController: NavController?) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-            contentDescription = "Kembali",
-            modifier = Modifier
-                .size(28.dp)
-                .clickable { navController?.popBackStack() }
-        )
-        Text(
-            text = "Profile",
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.weight(1f)
-        )
-        Spacer(modifier = Modifier.width(28.dp))
     }
 }
 
 @Composable
-fun ProfileHeader(fullName: String, email: String, onEditClick: () -> Unit) {
+fun MenuItemRow(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    onClick: () -> Unit
+) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp),
+        shape = RoundedCornerShape(12.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color.LightGray),
+        colors = ButtonDefaults.outlinedButtonColors(
+            containerColor = Color.Transparent,
+            contentColor = Color.Black
+        )
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = Color.Gray,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(16.dp))
+                Text(
+                    text = title,
+                    fontSize = 16.sp,
+                    color = Color.Black
+                )
+            }
+            Icon(
+                imageVector = Icons.Default.KeyboardArrowRight,
+                contentDescription = null,
+                tint = Color.Gray,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun ProfileHeader(fullName: String, email: String, bio: String, onEditClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Image(
@@ -181,61 +220,51 @@ fun ProfileHeader(fullName: String, email: String, onEditClick: () -> Unit) {
                 .border(2.dp, Color(0xFF73946B), CircleShape),
             contentScale = ContentScale.Crop
         )
+
         Spacer(modifier = Modifier.height(16.dp))
-        Text(text = fullName, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+
+        Text(
+            text = fullName,
+            fontWeight = FontWeight.Bold,
+            fontSize = 20.sp,
+            textAlign = TextAlign.Center
+        )
         Spacer(modifier = Modifier.height(4.dp))
-        Text(text = email, fontSize = 14.sp, color = Color.Gray)
-        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = email,
+            fontSize = 14.sp,
+            color = Color.Gray,
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = bio,
+            fontSize = 14.sp,
+            color = Color.DarkGray,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 24.dp)
+        )
+        Spacer(modifier = Modifier.height(20.dp))
         Button(
             onClick = onEditClick,
             shape = RoundedCornerShape(50),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF73946B))
+            colors = buttonColors(containerColor = Color(0xFF73946B))
         ) {
             Text("Edit Profile", modifier = Modifier.padding(horizontal = 16.dp))
         }
+        Spacer(modifier = Modifier.height(8.dp))
     }
 }
 
 @Composable
-fun StatisticsSection(savedRecipes: Int) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        StatItem(number = savedRecipes, label = "Resep Disimpan")
-    }
-}
-
-@Composable
-fun StatItem(number: Int, label: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text = number.toString(), fontWeight = FontWeight.Bold, fontSize = 18.sp)
-        Text(text = label, fontSize = 12.sp, color = Color.Gray)
-    }
-}
-
-@Composable
-fun ProfileMenuItem(icon: ImageVector, text: String, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(vertical = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(imageVector = icon, contentDescription = text, modifier = Modifier.size(24.dp), tint = Color(0xFF73946B))
-        Spacer(modifier = Modifier.width(16.dp))
-        Text(text = text, modifier = Modifier.weight(1f), fontSize = 16.sp)
-        Icon(imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = Color.Gray)
-    }
-}
-
-@Composable
-fun LogoutButton(onClick: () -> Unit) {
+fun LogoutButton(navController: NavController) {
     Button(
-        onClick = onClick,
+        onClick = {
+            FirebaseAuth.getInstance().signOut()
+            navController.navigate(AlurApp.LOGIN_SCREEN) {
+                popUpTo(0) { inclusive = true }
+            }
+        },
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp),
@@ -248,13 +277,5 @@ fun LogoutButton(onClick: () -> Unit) {
         Icon(imageVector = Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Log Out")
         Spacer(modifier = Modifier.width(8.dp))
         Text("Log Out", fontWeight = FontWeight.Bold)
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ProfileScreenExactPreview() {
-    MaterialTheme {
-        ProfileScreenExact(navController = rememberNavController())
     }
 }

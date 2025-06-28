@@ -1,5 +1,6 @@
 package com.example.ppab_reseporia
 
+import com.google.firebase.auth.FirebaseAuth
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.keyframes
 import androidx.compose.foundation.Image

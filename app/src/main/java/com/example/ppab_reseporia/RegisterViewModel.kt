@@ -1,11 +1,12 @@
 package com.example.ppab_reseporia
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.launch
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 class RegisterViewModel : ViewModel() {
     // State untuk input form
@@ -20,7 +21,7 @@ class RegisterViewModel : ViewModel() {
     var confirmPassword by mutableStateOf("")
         private set
 
-    // State BARU untuk menampung pesan error
+    // State untuk error
     var emailError by mutableStateOf<String?>(null)
         private set
     var passwordError by mutableStateOf<String?>(null)
@@ -28,45 +29,36 @@ class RegisterViewModel : ViewModel() {
     var confirmPasswordError by mutableStateOf<String?>(null)
         private set
 
-
     fun updateFullName(input: String) { fullName = input }
     fun updateUsername(input: String) { username = input }
     fun updateEmail(input: String) { email = input.also { emailError = null } }
     fun updatePassword(input: String) { password = input.also { passwordError = null } }
     fun updateConfirmPassword(input: String) { confirmPassword = input.also { confirmPasswordError = null } }
 
-
-    // Fungsi privat untuk melakukan validasi
+    // Validasi input
     private fun validate(): Boolean {
-        // Reset error sebelum validasi baru
         emailError = null
         passwordError = null
         confirmPasswordError = null
 
         var isValid = true
 
-        // 1. Validasi Email
         if (!email.endsWith("@gmail.com", ignoreCase = true)) {
             emailError = "Email harus menggunakan @gmail.com"
             isValid = false
         }
 
-        // 2. Validasi Panjang Password
         if (password.length < 8) {
             passwordError = "Password minimal 8 karakter"
             isValid = false
         }
 
-        // 3. Validasi Spesial Karakter di Password menggunakan Regex
-        // Regex ini mencari setidaknya satu karakter yang BUKAN huruf atau angka
         val specialCharPattern = Regex(".*[^A-Za-z0-9].*")
         if (!password.matches(specialCharPattern)) {
-            // Jika passwordError sudah ada isinya, tambahkan pesan baru. Jika tidak, buat pesan baru.
             passwordError = (passwordError?.let { "$it & " } ?: "") + "Harus ada spesial karakter"
             isValid = false
         }
 
-        // 4. Validasi Konfirmasi Password
         if (password != confirmPassword) {
             confirmPasswordError = "Password tidak cocok"
             isValid = false
@@ -75,18 +67,41 @@ class RegisterViewModel : ViewModel() {
         return isValid
     }
 
+    // 🔥 Fungsi ini dipanggil dari tombol Sign Up
     fun onRegisterClick(onRegisterSuccess: () -> Unit) {
-        // Panggil fungsi validate() terlebih dahulu
-        if (validate()) {
-            // Jika semua validasi lolos, baru jalankan logika registrasi
-            viewModelScope.launch {
-                println("Registrasi berhasil untuk user: $username")
-                onRegisterSuccess()
-            }
-        } else {
-            // Jika validasi gagal, tidak melakukan apa-apa.
-            // UI akan otomatis update karena state error sudah diubah.
-            println("Validasi gagal!")
+        if (!validate()) {
+            Log.w("RegisterViewModel", "❌ Validasi gagal")
+            return
         }
+
+        val auth = FirebaseAuth.getInstance()
+        val db = FirebaseFirestore.getInstance()
+
+        auth.createUserWithEmailAndPassword(email, password)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val uid = auth.currentUser?.uid
+                    if (uid != null) {
+                        val user = hashMapOf(
+                            "fullName" to fullName,
+                            "username" to username,
+                            "email" to email
+                        )
+
+                        db.collection("users").document(uid)
+                            .set(user)
+                            .addOnSuccessListener {
+                                Log.d("Firestore", "✅ Data user berhasil disimpan ke Firestore")
+                                onRegisterSuccess() // 👉 Ini dipanggil hanya setelah data benar-benar tersimpan
+                            }
+                            .addOnFailureListener { e ->
+                                Log.e("Firestore", "❌ Gagal simpan data user: ${e.message}")
+                            }
+                    }
+                } else {
+                    Log.e("Firebase", "❌ Gagal registrasi: ${task.exception?.message}")
+                }
+            }
     }
+
 }

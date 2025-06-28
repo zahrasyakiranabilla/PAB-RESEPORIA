@@ -1,5 +1,6 @@
 package com.example.ppab_reseporia
 
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -24,14 +25,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 
@@ -40,10 +42,16 @@ private val editScreenButtonColor = Color(0xFF73946B)
 private val editScreenTextColor = Color(0xFF333D29)
 
 @Composable
-fun EditProfileScreen(navController: NavController? = null) {
-    var fullName by remember { mutableStateOf("Zahra Syakira Nabilla") }
-    var username by remember { mutableStateOf("zahrasyakira") }
-    var bio by remember { mutableStateOf("Passionate home cook, loves baking desserts.") }
+fun EditProfileScreen(navController: NavController?) {
+    val viewModel: EditProfileViewModel = viewModel()
+    val fullName = viewModel.fullName
+    val username = viewModel.username
+    val bio = viewModel.bio
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        viewModel.loadUserProfile()
+    }
 
     Scaffold(
         topBar = {
@@ -61,56 +69,53 @@ fun EditProfileScreen(navController: NavController? = null) {
         ) {
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Composable baru untuk foto profil yang bisa diedit
             ProfilePictureEditor(
                 onEditClick = { /* Logika untuk ganti foto */ }
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Field untuk Full Name (contoh tambahan)
             EditableProfileField(
                 value = fullName,
-                onValueChange = { fullName = it },
+                onValueChange = { viewModel.fullName = it },
                 label = "Full Name",
                 leadingIcon = Icons.Default.Person
             )
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Field untuk Username
             EditableProfileField(
                 value = username,
-                onValueChange = { username = it },
+                onValueChange = { viewModel.username = it },
                 label = "Username",
-                leadingIcon = Icons.Default.Person // Bisa diganti dengan ikon lain
+                leadingIcon = Icons.Default.Person
             )
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Field untuk Bio (multi-line)
             EditableProfileField(
                 value = bio,
-                onValueChange = { bio = it },
+                onValueChange = { viewModel.bio = it },
                 label = "Bio",
-                singleLine = false, // Atur agar bisa multi-baris
-                maxLines = 4 // Batasi jumlah baris
+                singleLine = false,
+                maxLines = 4
             )
 
-            // Spacer untuk mendorong tombol ke bawah jika konten sedikit
             Spacer(modifier = Modifier.weight(1f))
 
-            // Composable baru untuk baris tombol aksi
             ActionButtonsRow(
                 onCancelClick = { navController?.popBackStack() },
                 onSaveClick = {
-                    // Logika untuk menyimpan perubahan
-                    println("Perubahan disimpan!")
-                    navController?.popBackStack()
-                }
+                    viewModel.saveChanges {
+                        Toast.makeText(context, "Perubahan berhasil disimpan", Toast.LENGTH_SHORT).show()
+                        navController?.popBackStack()
+                    }
+                },
+                isLoading = viewModel.loading
             )
-            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
+
+
 
 // -- Helper Composables untuk membuat UI lebih bersih --
 
@@ -184,7 +189,11 @@ fun EditableProfileField(
 }
 
 @Composable
-fun ActionButtonsRow(onCancelClick: () -> Unit, onSaveClick: () -> Unit) {
+fun ActionButtonsRow(
+    onCancelClick: () -> Unit,
+    onSaveClick: () -> Unit,
+    isLoading: Boolean = false
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -192,6 +201,7 @@ fun ActionButtonsRow(onCancelClick: () -> Unit, onSaveClick: () -> Unit) {
         // Tombol Batal (sekunder)
         OutlinedButton(
             onClick = onCancelClick,
+            enabled = !isLoading, // ⛔ disable saat loading
             modifier = Modifier
                 .weight(1f)
                 .height(55.dp),
@@ -200,23 +210,34 @@ fun ActionButtonsRow(onCancelClick: () -> Unit, onSaveClick: () -> Unit) {
         ) {
             Text("Batal", color = Color.Gray)
         }
+
         // Tombol Simpan (primer)
         Button(
             onClick = onSaveClick,
+            enabled = !isLoading, // ⛔ disable saat loading
             modifier = Modifier
                 .weight(1f)
                 .height(55.dp),
             shape = RoundedCornerShape(50),
             colors = ButtonDefaults.buttonColors(containerColor = editScreenButtonColor)
         ) {
-            Text(
-                text = "Simpan Perubahan",
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center
-            )
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    color = Color.White,
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Text(
+                    text = "Simpan Perubahan",
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
+                )
+            }
         }
     }
 }
+
 
 
 @Preview(showBackground = true)
