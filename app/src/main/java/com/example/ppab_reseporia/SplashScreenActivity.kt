@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ppab_reseporia.ui.theme.PPABRESEPORIATheme
 import kotlinx.coroutines.delay
+import com.example.ppab_reseporia.ui.theme.PoppinsFamily
 
 class SplashScreenActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -67,6 +68,7 @@ fun SplashScreenContent(modifier: Modifier = Modifier) {
             text = "Reseporia",
             fontSize = 36.sp,
             fontWeight = FontWeight.Bold,
+            fontFamily = PoppinsFamily,
             color = Color(0xFF6B8A5A)
         )
     }

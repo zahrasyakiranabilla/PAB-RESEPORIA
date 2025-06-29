@@ -14,6 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ppab_reseporia.ui.theme.PoppinsFamily
 
 @Composable
 fun WelcomeScreen(
@@ -44,8 +45,9 @@ fun WelcomeScreen(
             Text(
                 text = "Reseporia",
                 fontSize = 36.sp,
-                fontWeight = FontWeight.Black,
-                color = Color(0xFF5F8150),
+                fontFamily = PoppinsFamily,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF6B8A5A),
                 letterSpacing = 1.sp
             )
 
