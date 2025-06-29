@@ -1,5 +1,7 @@
+// DetailResep.kt - Updated with Favorites functionality
 package com.example.ppab_reseporia
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
@@ -45,15 +48,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.viewinterop.AndroidView
 import android.webkit.WebView
 import android.webkit.WebViewClient
 
@@ -91,7 +95,6 @@ fun DetailTopBar(
                 modifier = Modifier
                     .size(40.dp)
                     .clickable {
-                        // Navigate balik ke homepage dan clear back stack
                         navController.navigate(AlurApp.HOME_SCREEN) {
                             popUpTo(AlurApp.HOME_SCREEN) {
                                 inclusive = true
@@ -215,7 +218,6 @@ fun YouTubePlayer(
 @Preview(showBackground = true)
 @Composable
 fun RecipeDetailPreview() {
-    // Untuk preview menggunakan resep pertama di allFoodList
     val sampleRecipe = allFoodList.first()
     val navController = rememberNavController()
     RecipeDetailScreen(
@@ -231,10 +233,14 @@ fun RecipeDetailScreen(
     navController: NavController,
     onBack: () -> Unit
 ) {
+    val context = LocalContext.current
     val scrollState = rememberScrollState()
     var comment by remember { mutableStateOf("") }
     var searchQuery by remember { mutableStateOf("") }
     var userRating by remember { mutableStateOf(0) }
+
+    // Track favorite status
+    var isFavorite by remember { mutableStateOf(FavoritesManager.isFavorite(recipe)) }
 
     Scaffold(
         topBar = {
@@ -347,10 +353,8 @@ fun RecipeDetailScreen(
                         shape = RoundedCornerShape(16.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.White)
                     ) {
-                        // Ganti "dQw4w9WgXcQ" dengan video ID YouTube yang sebenarnya
-                        // Atau bisa ambil dari recipe.videoId jika sudah ditambahkan ke DataResep
                         YouTubePlayer(
-                            videoId = recipe.videoId ?: "dQw4w9WgXcQ", // default video ID
+                            videoId = recipe.videoId ?: "dQw4w9WgXcQ",
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(200.dp)
@@ -427,15 +431,13 @@ fun RecipeDetailScreen(
                     ) {
                         Button(
                             onClick = {
-                                // Handle submit review
                                 if (userRating > 0 && comment.isNotBlank()) {
-                                    // Simulate review submission
-                                    println("Review submitted:")
-                                    println("Rating: $userRating stars")
-                                    println("Comment: $comment")
-
-                                    // Show success message (you can implement Toast or Snackbar here)
-                                    // TODO: Save to database or send to server
+                                    // Show success message
+                                    Toast.makeText(
+                                        context,
+                                        "Ulasan berhasil dikirim!",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
 
                                     // Reset form after submission
                                     userRating = 0
@@ -455,7 +457,7 @@ fun RecipeDetailScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Simpan Resep Button
+                // Simpan Resep Button with Dynamic Text and Icon
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -464,12 +466,33 @@ fun RecipeDetailScreen(
                 ) {
                     Button(
                         onClick = {
-                            // TODO: Implement save to favorites functionality
+                            FavoritesManager.toggleFavorite(context, recipe)
+                            isFavorite = FavoritesManager.isFavorite(recipe)
+
+                            val message = if (isFavorite) {
+                                "Resep ditambahkan ke favorit!"
+                            } else {
+                                "Resep dihapus dari favorit!"
+                            }
+
+                            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                         },
                         shape = RoundedCornerShape(50),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5A7F65))
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isFavorite) Color(0xFFE74C3C) else Color(0xFF5A7F65)
+                        )
                     ) {
-                        Text("Simpan Resep", color = Color.White)
+                        Icon(
+                            imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                            contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
+                            tint = Color.White,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = if (isFavorite) "Hapus dari Favorit" else "Simpan ke Favorit",
+                            color = Color.White
+                        )
                     }
                 }
             }

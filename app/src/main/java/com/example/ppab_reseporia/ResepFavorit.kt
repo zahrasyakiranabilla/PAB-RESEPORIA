@@ -1,3 +1,4 @@
+// ResepFavorit.kt - Updated with FavoritesManager
 package com.example.ppab_reseporia
 
 import androidx.compose.foundation.Image
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -33,6 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -85,7 +89,6 @@ fun FavoriteTopBar(
                 modifier = Modifier
                     .size(40.dp)
                     .clickable {
-                        // Navigate balik ke homepage dan clear back stack
                         navController.navigate(AlurApp.HOME_SCREEN) {
                             popUpTo(AlurApp.HOME_SCREEN) {
                                 inclusive = true
@@ -146,7 +149,7 @@ fun FavoriteTopBar(
             contentDescription = "Favorite",
             tint = Color.White,
             modifier = Modifier.clickable {
-                // Already in favorite screen, could do nothing or refresh
+                // Already in favorite screen
             }
         )
         Spacer(modifier = Modifier.width(8.dp))
@@ -169,14 +172,21 @@ fun ResepFavoritScreenPreview() {
 
 @Composable
 fun ResepFavoritScreen(navController: NavController) {
-    // Masih menampilkan semua resep sebagai "favorit"
-    val favoriteFoodList = allFoodList
+    val context = LocalContext.current
     var searchQuery by remember { mutableStateOf("") }
 
+    // Load favorites when screen opens
+    LaunchedEffect(Unit) {
+        FavoritesManager.loadFavorites(context)
+    }
+
+    // Get current favorites from FavoritesManager
+    val favoriteFoodList = FavoritesManager.favoriteRecipes
+
     // Filter berdasarkan search query
-    val filteredFavoriteList = remember(favoriteFoodList, searchQuery) {
+    val filteredFavoriteList = remember(favoriteFoodList.toList(), searchQuery) {
         if (searchQuery.isBlank()) {
-            favoriteFoodList
+            favoriteFoodList.toList()
         } else {
             favoriteFoodList.filter {
                 it.name.contains(searchQuery, ignoreCase = true)
@@ -256,8 +266,7 @@ fun ResepFavoritScreen(navController: NavController) {
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    items(filteredFavoriteList.size) { index ->
-                        val food = filteredFavoriteList[index]
+                    items(filteredFavoriteList) { food ->
                         FoodList(
                             name = food.name,
                             imageRes = food.imageRes,

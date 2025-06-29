@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -31,11 +32,17 @@ import androidx.compose.material.icons.filled.KeyboardArrowRight
 
 @Composable
 fun ProfileScreenExact(navController: NavController) {
+    val context = LocalContext.current
     var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var bio by remember { mutableStateOf("") }
 
+    // Load favorites dan track jumlah resep favorit
     LaunchedEffect(Unit) {
+        // Load favorites from storage
+        FavoritesManager.loadFavorites(context)
+
+        // Load user profile data
         val uid = FirebaseAuth.getInstance().currentUser?.uid
         if (uid != null) {
             FirebaseFirestore.getInstance().collection("users").document(uid)
@@ -52,6 +59,9 @@ fun ProfileScreenExact(navController: NavController) {
                 }
         }
     }
+
+    // Get jumlah resep favorit secara real-time
+    val favoriteCount = FavoritesManager.favoriteRecipes.size
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -78,9 +88,9 @@ fun ProfileScreenExact(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Stats section - Resep Disimpan
+                // Stats section - Resep Disimpan (Real-time dari FavoritesManager)
                 Text(
-                    text = "9",
+                    text = favoriteCount.toString(),
                     fontSize = 29.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black
@@ -99,10 +109,11 @@ fun ProfileScreenExact(navController: NavController) {
                         .fillMaxWidth()
                         .padding(horizontal = 24.dp)
                 ) {
-                    // Resep Favorit
-                    MenuItemRow(
+                    // Resep Favorit dengan badge count
+                    MenuItemRowWithBadge(
                         icon = Icons.Default.Favorite,
                         title = "Resep Favorit",
+                        badgeCount = favoriteCount,
                         onClick = { navController.navigate(AlurApp.FAVORITE_RECIPES_SCREEN) }
                     )
 
@@ -150,6 +161,78 @@ fun ProfileScreenExact(navController: NavController) {
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun MenuItemRowWithBadge(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    badgeCount: Int,
+    onClick: () -> Unit
+) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp),
+        shape = RoundedCornerShape(12.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color.LightGray),
+        colors = ButtonDefaults.outlinedButtonColors(
+            containerColor = Color.Transparent,
+            contentColor = Color.Black
+        )
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = Color.Gray,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(16.dp))
+                Text(
+                    text = title,
+                    fontSize = 16.sp,
+                    color = Color.Black
+                )
+
+                // Badge untuk menampilkan jumlah favorit
+                if (badgeCount > 0) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Surface(
+                        modifier = Modifier.size(20.dp),
+                        shape = CircleShape,
+                        color = Color(0xFF5F8150)
+                    ) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = if (badgeCount > 99) "99+" else badgeCount.toString(),
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+                    }
+                }
+            }
+            Icon(
+                imageVector = Icons.Default.KeyboardArrowRight,
+                contentDescription = null,
+                tint = Color.Gray,
+                modifier = Modifier.size(24.dp)
+            )
         }
     }
 }
