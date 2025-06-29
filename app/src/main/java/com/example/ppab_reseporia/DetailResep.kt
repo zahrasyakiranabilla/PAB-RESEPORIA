@@ -23,6 +23,8 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -51,6 +53,9 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.viewinterop.AndroidView
+import android.webkit.WebView
+import android.webkit.WebViewClient
 
 @Composable
 fun DetailTopBar(
@@ -166,6 +171,47 @@ fun DetailTopBar(
     }
 }
 
+@Composable
+fun StarRating(
+    rating: Int,
+    onRatingChange: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(modifier = modifier) {
+        for (i in 1..5) {
+            Icon(
+                imageVector = if (i <= rating) Icons.Filled.Star else Icons.Outlined.Star,
+                contentDescription = "Star $i",
+                tint = if (i <= rating) Color(0xFFFFD700) else Color.Gray,
+                modifier = Modifier
+                    .size(32.dp)
+                    .clickable { onRatingChange(i) }
+            )
+        }
+    }
+}
+
+@Composable
+fun YouTubePlayer(
+    videoId: String,
+    modifier: Modifier = Modifier
+) {
+    AndroidView(
+        factory = { context ->
+            WebView(context).apply {
+                webViewClient = WebViewClient()
+                settings.javaScriptEnabled = true
+                settings.domStorageEnabled = true
+            }
+        },
+        update = { webView ->
+            val embedUrl = "https://www.youtube.com/embed/$videoId"
+            webView.loadUrl(embedUrl)
+        },
+        modifier = modifier
+    )
+}
+
 @Preview(showBackground = true)
 @Composable
 fun RecipeDetailPreview() {
@@ -188,6 +234,7 @@ fun RecipeDetailScreen(
     val scrollState = rememberScrollState()
     var comment by remember { mutableStateOf("") }
     var searchQuery by remember { mutableStateOf("") }
+    var userRating by remember { mutableStateOf(0) }
 
     Scaffold(
         topBar = {
@@ -287,27 +334,33 @@ fun RecipeDetailScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Video Placeholder (BELUM MENGGUNAKAN VIDEO)
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 32.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White)
-                ) {
-                    Box(modifier = Modifier
-                        .fillMaxWidth()
-                        .height(150.dp)
-                        .background(Color.LightGray, RoundedCornerShape(16.dp)),
-                        contentAlignment = Alignment.Center
+                // YouTube Video Player
+                Column(modifier = Modifier.padding(horizontal = 32.dp)) {
+                    Text(
+                        text = "Video Tutorial",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
                     ) {
-                        Text("Video Resep", color = Color.DarkGray)
+                        // Ganti "dQw4w9WgXcQ" dengan video ID YouTube yang sebenarnya
+                        // Atau bisa ambil dari recipe.videoId jika sudah ditambahkan ke DataResep
+                        YouTubePlayer(
+                            videoId = recipe.videoId ?: "dQw4w9WgXcQ", // default video ID
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp)
+                        )
                     }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Ulasan
+                // Ulasan dengan Rating
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -315,21 +368,92 @@ fun RecipeDetailScreen(
                         .padding(16.dp)
                 ) {
                     Text(
-                        text = "Ulasan",
+                        text = "Berikan Ulasan",
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
                         fontSize = 18.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Rating Stars
+                    Text(
+                        text = "Rating:",
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    StarRating(
+                        rating = userRating,
+                        onRatingChange = { userRating = it }
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Comment TextField
+                    Text(
+                        text = "Komentar:",
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     TextField(
                         value = comment,
                         onValueChange = { comment = it },
-                        placeholder = { Text("Tulis komentar di sini") },
+                        placeholder = { Text("Tulis komentar tentang resep ini...") },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(Color.White, RoundedCornerShape(8.dp))
+                            .height(100.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = TextFieldDefaults.colors(
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            disabledIndicatorColor = Color.Transparent,
+                            errorIndicatorColor = Color.Transparent,
+                            focusedContainerColor = Color.White,
+                            unfocusedContainerColor = Color.White
+                        ),
+                        maxLines = 3
                     )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Submit Review Button
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Button(
+                            onClick = {
+                                // Handle submit review
+                                if (userRating > 0 && comment.isNotBlank()) {
+                                    // Simulate review submission
+                                    println("Review submitted:")
+                                    println("Rating: $userRating stars")
+                                    println("Comment: $comment")
+
+                                    // Show success message (you can implement Toast or Snackbar here)
+                                    // TODO: Save to database or send to server
+
+                                    // Reset form after submission
+                                    userRating = 0
+                                    comment = ""
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF98BC92)
+                            ),
+                            shape = RoundedCornerShape(8.dp),
+                            enabled = userRating > 0 && comment.isNotBlank()
+                        ) {
+                            Text("Kirim Ulasan", color = Color.White)
+                        }
+                    }
                 }
+
+                Spacer(modifier = Modifier.height(16.dp))
 
                 // Simpan Resep Button
                 Box(
@@ -340,7 +464,7 @@ fun RecipeDetailScreen(
                 ) {
                     Button(
                         onClick = {
-                            // Belum menerapkan simpan resep ke favorite
+                            // TODO: Implement save to favorites functionality
                         },
                         shape = RoundedCornerShape(50),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5A7F65))

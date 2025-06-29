@@ -10,7 +10,8 @@ data class DataResep(
     val category: String,
     val about: String,
     val ingredients: List<String>,
-    val instructions: List<String>
+    val instructions: List<String>,
+    val videoId: String? = null  // Tambahkan ini
 )
 
 val allFoodList = listOf(
@@ -46,7 +47,8 @@ val allFoodList = listOf(
             "Masukkan potongan ayam, aduk rata. Tambahkan air secukupnya.",
             "Bumbui dengan gula, garam, dan masako ayam. Masak hingga bumbu meresap dan ayam empuk.",
             "Terakhir, masukkan daun kemangi, aduk sebentar hingga layu. Angkat dan sajikan selagi hangat."
-        )
+        ),
+        videoId = "H_8fVsFfxP0"
     ),
     DataResep(
         name = "Mango Sticky",
@@ -71,7 +73,8 @@ val allFoodList = listOf(
             "Campurkan ketan setengah matang dengan santan rebus. Aduk rata, biarkan santan meresap.",
             "Kukus kembali ketan selama 15 menit hingga matang.",
             "Sajikan ketan dengan potongan mangga segar dan siraman santan kental sisa (jika ada). Taburi dengan wijen sangrai."
-        )
+        ),
+        videoId = "u7QfzLYeBBY"
     ),
     DataResep(
         name = "Salad Buah",
@@ -94,7 +97,8 @@ val allFoodList = listOf(
             "Tuang saus ke atas potongan buah, aduk perlahan hingga tercampur rata.",
             "Masukkan ke dalam lemari es selama minimal 30 menit agar dingin dan saus lebih meresap.",
             "Sajikan dingin dengan taburan keju cheddar parut."
-        )
+        ),
+        videoId = "u7QfzLYeBBY"
     ),
     DataResep(
         name = "Tahu Bihun",
@@ -122,7 +126,8 @@ val allFoodList = listOf(
             "Masukkan bihun yang sudah ditiriskan, tambahkan kecap manis, garam, dan merica bubuk. Aduk rata.",
             "Masak hingga bumbu meresap dan bihun matang. Tambahkan daun bawang, aduk sebentar.",
             "Angkat dan sajikan selagi hangat."
-        )
+        ),
+        videoId = "0gmZsHZFDfQ"
     ),
     DataResep(
         name = "Wedang Jahe",
@@ -144,7 +149,8 @@ val allFoodList = listOf(
             "Rebus air bersama jahe, gula merah, sereh, dan daun pandan hingga mendidih dan gula larut.",
             "Kecilkan api, masak terus sekitar 15-20 menit agar sari jahe keluar sempurna.",
             "Saring dan sajikan wedang jahe selagi hangat."
-        )
+        ),
+        videoId = "3IiC8HD-ZDw"
     ),
     DataResep(
         name = "Pindang Serani",
@@ -177,7 +183,8 @@ val allFoodList = listOf(
             "Masukkan potongan ikan, belimbing wuluh, dan tomat hijau. Bumbui dengan garam dan gula.",
             "Masak hingga ikan matang dan bumbu meresap. Koreksi rasa.",
             "Angkat dan sajikan pindang serani selagi hangat."
-        )
+        ),
+        videoId = "iTTUfia_mdo"
     ),
     DataResep(
         name = "Tiramisu Dessert",
@@ -204,7 +211,8 @@ val allFoodList = listOf(
             "Celupkan ladyfinger satu per satu ke dalam campuran kopi, jangan terlalu lama.",
             "Tata ladyfinger di dasar wadah, lapisi dengan adonan mascarpone. Ulangi hingga adonan habis.",
             "Dinginkan di kulkas minimal 4 jam atau semalaman. Taburi cokelat bubuk sebelum disajikan."
-        )
+        ),
+        videoId = "7VTtenyKRg4"
     ),
     DataResep(
         name = "Strawberry Matcha",
@@ -229,7 +237,8 @@ val allFoodList = listOf(
             "Tuang susu segar dingin.",
             "Perlahan tuang larutan matcha di atas susu. Jangan diaduk agar terbentuk gradasi warna.",
             "Sajikan segera."
-        )
+        ),
+        videoId = "y81HrOvgM9o"
     ),
     DataResep(
         name = "Es Kuwut",
@@ -253,6 +262,7 @@ val allFoodList = listOf(
             "Tambahkan air kelapa muda dan sirup gula/coco pandan sesuai selera.",
             "Masukkan es batu secukupnya.",
             "Aduk rata dan sajikan dingin."
-        )
+        ),
+        videoId = "H_8fVsFfxP0"
     )
 )
