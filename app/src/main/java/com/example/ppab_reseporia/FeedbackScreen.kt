@@ -23,19 +23,24 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,6 +54,22 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.ppab_reseporia.ui.theme.PPABRESEPORIATheme
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
+// Data class untuk feedback
+data class Feedback(
+    val id: String = "",
+    val message: String = "",
+    val timestamp: String = "",
+    val status: String = "pending" // pending, read, responded
+)
 
 @Composable
 fun FeedbackTopBar(
@@ -84,7 +105,6 @@ fun FeedbackTopBar(
                 modifier = Modifier
                     .size(40.dp)
                     .clickable {
-                        // Navigate balik ke homepage dan clear back stack
                         navController.navigate(AlurApp.HOME_SCREEN) {
                             popUpTo(AlurApp.HOME_SCREEN) {
                                 inclusive = true
@@ -164,9 +184,49 @@ fun FeedbackTopBar(
 fun FeedbackScreen(navController: NavController) {
     var feedbackText by remember { mutableStateOf("") }
     var searchQuery by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+    var showSuccess by remember { mutableStateOf(false) }
 
     val backgroundColor = Color(0xFFF0ECCF)
     val greenColor = Color(0xFF7A977B)
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Firebase Firestore instance
+    val db = Firebase.firestore
+
+    // Function untuk submit feedback ke Firebase
+    suspend fun submitFeedback(message: String): Boolean {
+        return try {
+            val currentTime = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+            val feedbackId = db.collection("feedbacks").document().id
+
+            val feedback = Feedback(
+                id = feedbackId,
+                message = message,
+                timestamp = currentTime,
+                status = "pending"
+            )
+
+            db.collection("feedbacks")
+                .document(feedbackId)
+                .set(feedback)
+                .await()
+
+            true
+        } catch (e: Exception) {
+            println("Error submitting feedback: ${e.message}")
+            false
+        }
+    }
+
+    // Show success message
+    LaunchedEffect(showSuccess) {
+        if (showSuccess) {
+            snackbarHostState.showSnackbar("Saran berhasil dikirim! Terima kasih atas masukan Anda.")
+            showSuccess = false
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -176,7 +236,8 @@ fun FeedbackScreen(navController: NavController) {
                 onSearchQueryChange = { searchQuery = it },
                 onBack = { navController.popBackStack() }
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -236,17 +297,33 @@ fun FeedbackScreen(navController: NavController) {
                         text = "Tulis saran Anda di sini...",
                         color = Color.White.copy(alpha = 0.7f)
                     )
-                }
+                },
+                enabled = !isLoading
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            //Belum menerapkan button kirim saran/pengaduan
+            // Button kirim saran dengan Firebase integration
             Button(
                 onClick = {
-                    println("Feedback sent: $feedbackText")
-                    // TODO: Implement actual feedback submission
-                    // Show success message and clear form or navigate back
+                    if (feedbackText.trim().isNotEmpty()) {
+                        scope.launch {
+                            isLoading = true
+                            val success = submitFeedback(feedbackText.trim())
+                            isLoading = false
+
+                            if (success) {
+                                feedbackText = "" // Clear form
+                                showSuccess = true
+                            } else {
+                                snackbarHostState.showSnackbar("Gagal mengirim saran. Silakan coba lagi.")
+                            }
+                        }
+                    } else {
+                        scope.launch {
+                            snackbarHostState.showSnackbar("Mohon isi saran terlebih dahulu.")
+                        }
+                    }
                 },
                 modifier = Modifier
                     .width(180.dp)
@@ -255,13 +332,21 @@ fun FeedbackScreen(navController: NavController) {
                     containerColor = greenColor,
                     contentColor = Color.White
                 ),
-                shape = RoundedCornerShape(24.dp)
+                shape = RoundedCornerShape(24.dp),
+                enabled = !isLoading
             ) {
-                Text(
-                    text = "Kirim",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                } else {
+                    Text(
+                        text = "Kirim",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
         }
     }
