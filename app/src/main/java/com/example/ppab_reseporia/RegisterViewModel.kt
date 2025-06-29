@@ -92,7 +92,7 @@ class RegisterViewModel : ViewModel() {
                             .set(user)
                             .addOnSuccessListener {
                                 Log.d("Firestore", "✅ Data user berhasil disimpan ke Firestore")
-                                onRegisterSuccess() // 👉 Ini dipanggil hanya setelah data benar-benar tersimpan
+                                onRegisterSuccess() // tersimpa jika registrasinya sukses
                             }
                             .addOnFailureListener { e ->
                                 Log.e("Firestore", "❌ Gagal simpan data user: ${e.message}")

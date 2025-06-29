@@ -2,7 +2,6 @@ package com.example.ppab_reseporia
 
 object AlurApp {
     const val SPLASH_SCREEN = "splash"
-    const val LOGIN_OR_REGISTER_SCREEN = "loginOrRegister"
     const val LOGIN_SCREEN = "login"
     const val REGISTER_SCREEN = "register"
     const val HOME_SCREEN = "home"
@@ -12,6 +11,7 @@ object AlurApp {
     const val PROFILE_SCREEN = "profile"
     const val EDIT_PROFILE_SCREEN = "editProfile"
     const val FEEDBACK_SCREEN = "feedback"
+    const val WELCOME_SCREEN = "welcome/{userName}"
 
     fun getCategoryRoute(categoryName: String): String {
         return "category/$categoryName"
@@ -20,4 +20,10 @@ object AlurApp {
     fun getDetailRecipeRoute(foodName: String): String {
         return "detailRecipe/$foodName"
     }
+
+    fun getWelcomeRoute(userName: String): String {
+        return "welcome/$userName"
+    }
 }
+
+

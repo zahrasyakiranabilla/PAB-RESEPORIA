@@ -32,6 +32,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.ppab_reseporia.ui.theme.PPABRESEPORIATheme
 import com.example.ppab_reseporia.ui.theme.PoppinsFamily
+import com.google.firebase.firestore.FirebaseFirestore
 
 val GreenBackground = Color(0xFF73946B)
 val LightBeigeBackground = Color(0xFFF0ECCF)
@@ -42,7 +43,7 @@ val TextFieldLineColor = Color.White
 @Composable
 fun LoginScreen(
     navController: NavController,
-    onLoginSuccess: () -> Unit,
+    onLoginSuccess: (String) -> Unit,
     loginViewModel: LoginViewModel = viewModel()
 ) {
 
@@ -161,8 +162,38 @@ fun LoginScreen(
 
                     Button(
                         onClick = {
-                            loginViewModel.login(onLoginSuccess)
-                        },
+                            if (fieldsNotEmpty) {
+                                FirebaseAuth.getInstance()
+                                    .signInWithEmailAndPassword(email, password)
+                                    .addOnSuccessListener {
+                                        val uid = FirebaseAuth.getInstance().currentUser?.uid
+                                        if (uid != null) {
+                                            FirebaseFirestore.getInstance()
+                                                .collection("users")
+                                                .document(uid)
+                                                .get()
+                                                .addOnSuccessListener { document ->
+                                                    val userName = document.getString("fullName") ?: "User"
+                                                    onLoginSuccess(userName)
+                                                }
+
+                                                .addOnFailureListener {
+                                                    onLoginSuccess("User")
+                                                }
+                                        } else {
+                                            onLoginSuccess("User")
+                                        }
+                                    }
+                                    .addOnFailureListener {
+                                        // Tampilkan feedback ke user kalau login gagal
+                                        loginViewModel.triggerShakeAnimation()
+                                    }
+                            } else {
+                                loginViewModel.triggerShakeAnimation()
+                            }
+                        }
+
+                        ,
                         shape = RoundedCornerShape(20.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = if (fieldsNotEmpty) Color.White else Color.White.copy(alpha = 0.7f),

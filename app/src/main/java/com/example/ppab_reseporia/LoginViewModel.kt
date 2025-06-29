@@ -11,8 +11,10 @@ class LoginViewModel : ViewModel() {
 
     var email by mutableStateOf("")
         private set
+
     var password by mutableStateOf("")
         private set
+
     var shakeButtonTrigger by mutableStateOf(0)
         private set
 
@@ -28,11 +30,15 @@ class LoginViewModel : ViewModel() {
         shakeButtonTrigger = 0
     }
 
-    // 🔐 LOGIN ke Firebase
+    fun triggerShakeAnimation() {
+        shakeButtonTrigger++
+    }
+
+    // 🔐 LOGIN ke Firebase (optional digunakan kalau masih pakai ViewModel login)
     fun login(onLoginSuccess: () -> Unit) {
         if (email.isBlank() || password.isBlank()) {
             Log.w("LoginViewModel", "❌ Email atau Password kosong")
-            shakeButtonTrigger++
+            triggerShakeAnimation()
             return
         }
 
@@ -45,7 +51,7 @@ class LoginViewModel : ViewModel() {
                     onLoginSuccess()
                 } else {
                     Log.e("Firebase", "❌ Login gagal: ${task.exception?.message}")
-                    shakeButtonTrigger++
+                    triggerShakeAnimation()
                 }
             }
     }

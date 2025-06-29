@@ -28,18 +28,14 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun AppNavigation(navController: androidx.navigation.NavHostController) {
-    NavHost(navController = navController, startDestination = AlurApp.LOGIN_OR_REGISTER_SCREEN) {
-
-        composable(AlurApp.LOGIN_OR_REGISTER_SCREEN) {
-            LoginOrRegisterScreenContent(navController = navController)
-        }
+    NavHost(navController = navController, startDestination = AlurApp.LOGIN_SCREEN) {
 
         composable(AlurApp.LOGIN_SCREEN) {
             LoginScreen(
                 navController = navController,
                 onLoginSuccess = {
-                    navController.navigate(AlurApp.HOME_SCREEN) {
-                        popUpTo(AlurApp.LOGIN_OR_REGISTER_SCREEN) { // Pop dari Login/Register screen
+                    navController.navigate(AlurApp.WELCOME_SCREEN) {
+                        popUpTo(AlurApp.LOGIN_SCREEN) { // Pop dari Login/Register screen
                             inclusive = true
                         }
                     }
@@ -50,6 +46,19 @@ fun AppNavigation(navController: androidx.navigation.NavHostController) {
         composable(AlurApp.REGISTER_SCREEN) {
             RegisterScreen(navController = navController)
         }
+
+        composable(
+            route = AlurApp.WELCOME_SCREEN,
+            arguments = listOf(navArgument("userName") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val userName = backStackEntry.arguments?.getString("userName") ?: "User"
+            WelcomeScreen(userName = userName) {
+                navController.navigate(AlurApp.HOME_SCREEN) {
+                    popUpTo(AlurApp.WELCOME_SCREEN) { inclusive = true }
+                }
+            }
+        }
+
 
         composable(AlurApp.HOME_SCREEN) {
             HomeScreen(navController = navController, foodList = allFoodList)
