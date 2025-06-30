@@ -5,10 +5,9 @@ Kelompok 7 :
 - Zahra Syakira Nabilla (L0123142)
 - Fitriyani Tri Purnamasari (L0123145)
 
-#Deskripsi Singkat Proyek : 
 Reseporia adalah platform yang menyediakan berbagai resep makanan dari berbagai kategori, mulai dari appetizer, main course, dan dessert. Reseporia menawarkan pilihan rasa yang beragam, baik yang manis (sweet) hingga asin (savory).  Dengan tampilan yang sederhana dan mudah digunakan, Reseporia menawarkan pengalaman eksplorasi resep yang lebih menyenangkan dan interaktif. Aplikasi ini tidak hanya berfungsi sebagai tempat mencari resep, tetapi juga memungkinkan pengguna untuk memberikan rating, menambahkan komentar, dan menyimpan resep favorit.
 
-#Fitur : 
+Fitur: 
 1. Login User
    Setiap pengguna diwajibkan untuk register/login akun dengan menggunakan username dan password agar dapat mengakses seluruh fitur yang ada.
 2. Pencarian Resep
